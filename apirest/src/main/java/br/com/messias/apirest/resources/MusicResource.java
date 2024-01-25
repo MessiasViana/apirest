@@ -24,8 +24,8 @@ import br.com.messias.apirest.repository.PlaylistRepository;
 
 @CrossOrigin(origins = "*")
 @RestController
-@RequestMapping(value="/playlist")
-public class PlaylistResource {
+@RequestMapping(value="/musicas")
+public class MusicResource {
 
 	@Autowired
 	PlaylistRepository playlistRepository;
@@ -33,50 +33,58 @@ public class PlaylistResource {
 	MusicaRepository musicaRepository;
 	
 	@GetMapping("/lists")
-	public List<Playlist> listaPlaylist(){
-		List<Playlist> playlists = playlistRepository.findAll();
+	public List<Musica> listaMusicas(){
+		List<Musica> musicas = musicaRepository.findAll();
 		
-		for (Playlist playlist : playlists) {
-            List<Musica> musicas = musicaRepository.findByPlaylist(playlist);
-            playlist.setMusicas(musicas);
-        }
-		
-		return playlists;
+		return musicas;
 	}
 	
 	@GetMapping("/lists/{listName}")
-	public	ResponseEntity<Object> listaMusicaUnica(@PathVariable(value="listName") String name){
-		Playlist playlist = playlistRepository.findByNome(name);
+	public	ResponseEntity<Object> listaMusicaUnica(@PathVariable(value="listName") String titulo){
+		Musica musica = musicaRepository.findByTitulo(titulo);
 		
-		if (playlist != null) {
-	        return ResponseEntity.ok(playlist);
+		if (musica != null) {
+	        return ResponseEntity.ok(musica);
 	    } else {
 	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Lista não encontrada.");
 	    }
 	}
 	
 	@PostMapping("/lists")
-	public ResponseEntity<Object> adicionarPlaylist(@RequestBody @Validated  Playlist playlist) {
-		if (playlist.getNome() == null || playlist.getNome().isEmpty()) {
-	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Nome da lista inválido.");
+	public ResponseEntity<Object> adicionarMusica(@RequestBody @Validated Musica musica) {
+	    if (musica.getTitulo() == null || musica.getArtista() == null || musica.getGenero() == null || musica.getAno() == null) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Dados inválidos.");
 	    }
-		
-		Playlist novaPlaylist = playlistRepository.save(playlist);
-		URI location = ServletUriComponentsBuilder
+
+	    if (musica.getPlaylist() == null) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("A Música deve estar associada a uma Playlist.");
+	    }
+
+	    Playlist playlist = playlistRepository.findByNome(musica.getPlaylist().getNome());
+
+	    if (playlist == null) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Playlist não encontrada.");
+	    }
+
+	    musica.setPlaylist(playlist);
+
+	    Musica novaMusica = musicaRepository.save(musica);
+	    URI location = ServletUriComponentsBuilder
 	            .fromCurrentRequest()
 	            .path("/{listName}")
-	            .buildAndExpand(novaPlaylist.getNome())
+	            .buildAndExpand(novaMusica.getTitulo())
 	            .toUri();
 
-	    return ResponseEntity.created(location).body(novaPlaylist);
+	    return ResponseEntity.created(location).body(novaMusica);
 	}
+
 	
 	@DeleteMapping("/lists/{listName}")
-	public ResponseEntity<Object> deletaProduto(@PathVariable(value="listName") String name) {
-		Playlist playlist = playlistRepository.findByNome(name);
+	public ResponseEntity<Object> deletaProduto(@PathVariable(value="listName") String titulo) {
+		Musica musica = musicaRepository.findByTitulo(titulo);
 		
-		if (playlist != null) {
-	        playlistRepository.delete(playlist);
+		if (titulo != null) {
+			musicaRepository.delete(musica);
 	        return ResponseEntity.noContent().build();
 	    } else {
 	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Lista não encontrada.");
@@ -84,3 +92,4 @@ public class PlaylistResource {
 	}
 	
 }
+
