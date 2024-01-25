@@ -25,7 +25,7 @@ public class Musica implements Serializable {
 	private String genero;
 	
 	@ManyToOne
-    @JoinColumn(name = "playlist_id")
+    @JoinColumn(name = "playlist_id", nullable = false)
     private Playlist playlist;
 	
 	public Musica() {

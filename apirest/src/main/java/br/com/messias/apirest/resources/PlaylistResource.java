@@ -16,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import br.com.messias.apirest.models.Musica;
 import br.com.messias.apirest.models.Playlist;
+import br.com.messias.apirest.repository.MusicaRepository;
 import br.com.messias.apirest.repository.PlaylistRepository;
 
 @RestController
@@ -25,10 +27,19 @@ public class PlaylistResource {
 
 	@Autowired
 	PlaylistRepository playlistRepository;
+	@Autowired
+	MusicaRepository musicaRepository;
 	
 	@GetMapping("/lists")
 	public List<Playlist> listaPlaylist(){
-		return playlistRepository.findAll();
+		List<Playlist> playlists = playlistRepository.findAll();
+		
+		for (Playlist playlist : playlists) {
+            List<Musica> musicas = musicaRepository.findByPlaylist(playlist);
+            playlist.setMusicas(musicas);
+        }
+		
+		return playlists;
 	}
 	
 	@GetMapping("/lists/{listName}")
